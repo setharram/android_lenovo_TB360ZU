@@ -1,0 +1,34 @@
+# fstab.qcom — Lenovo Tab M10 5G TB360ZU
+# Partition layout confirmed from lpdump + live device mount table
+#
+# <src>                                          <mnt>        <type>  <mnt_flags>              <fsmgr_flags>
+
+# Dynamic logical partitions (from super.img)
+system                                           /system      ext4    ro,barrier=1             wait,slotselect,avb=vbmeta_system,logical,first_stage_mount
+system_ext                                       /system_ext  ext4    ro,barrier=1             wait,slotselect,avb=vbmeta_system,logical,first_stage_mount
+product                                          /product     ext4    ro,barrier=1             wait,slotselect,logical,first_stage_mount
+vendor                                           /vendor      ext4    ro,barrier=1             wait,slotselect,avb,logical,first_stage_mount
+odm                                              /odm         ext4    ro,barrier=1             wait,slotselect,logical,first_stage_mount
+
+# Userdata — f2fs with FBE confirmed from live device
+# fileencryption confirmed via live device mount: aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0
+/dev/block/bootdevice/by-name/userdata           /data        f2fs    noatime,nosuid,nodev,noauto_da_alloc,discard   wait,check,fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0,keydirectory=/metadata/vold/metadata_encryption,metadata_encryption=aes-256-xts:wrappedkey_v0,inlinecrypt,reservedsize=128m,checkpoint=fs
+
+# Metadata partition — required for FBE key storage
+/dev/block/bootdevice/by-name/metadata           /metadata    ext4    noatime,nosuid,nodev     wait,formattable,first_stage_mount
+
+# Persist — calibration data (confirmed: /dev/block/sda9 on live device)
+/dev/block/bootdevice/by-name/persist            /mnt/vendor/persist ext4 noatime,nosuid,nodev,barrier=1 wait
+
+# Firmware partitions (confirmed from live mount table)
+# /dev/block/sde23 → /vendor/firmware_mnt (vfat)
+/dev/block/bootdevice/by-name/modem              /vendor/firmware_mnt vfat ro,shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0   wait,slotselect
+
+# DSP firmware — confirmed from live device: /dev/block/sde26 → /vendor/dsp
+/dev/block/bootdevice/by-name/dsp                /vendor/dsp  ext4    ro,nosuid,nodev          wait,slotselect
+
+# BT firmware — confirmed from live device: /dev/block/sde24 → /vendor/bt_firmware
+/dev/block/bootdevice/by-name/bluetooth          /vendor/bt_firmware vfat ro,uid=1002,gid=3002,dmask=227,fmask=337,context=u:object_r:bt_firmware_file:s0 wait
+
+# Misc
+/dev/block/bootdevice/by-name/misc              /misc        emmc    defaults                  defaults

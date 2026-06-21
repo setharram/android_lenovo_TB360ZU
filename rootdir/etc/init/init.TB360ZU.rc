@@ -1,0 +1,58 @@
+on early-init
+    # UFS storage confirmed
+    write /sys/block/sda/queue/scheduler deadline
+    write /sys/block/sdb/queue/scheduler deadline
+    write /sys/block/sdc/queue/scheduler deadline
+
+on init
+    # DSP firmware path
+    wait /dev/block/bootdevice/by-name/dsp
+
+    # Persist symlinks
+    symlink /mnt/vendor/persist /persist
+
+on post-fs
+    # wifi firmware directory
+    chown wifi wifi /persist/WCNSS_wlan_nv.bin
+
+on post-fs-data
+    # Display calibration
+    mkdir /data/vendor/display 0770 system graphics
+
+    # Touch calibration persist
+    mkdir /data/vendor/touch 0770 system system
+
+    # Audio
+    mkdir /data/vendor/audio 0770 audio audio
+    mkdir /data/misc/audio 0770 audio audio
+
+    # Camera
+    mkdir /data/vendor/camera 0770 camera camera
+
+    # WiFi
+    mkdir /data/vendor/wifi 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa_supplicant 0770 wifi wifi
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+
+    # BT
+    mkdir /data/vendor/bluetooth 0770 bluetooth bluetooth
+
+on boot
+    # Display — HX83102 brightness path confirmed from kernel config
+    chown system system /sys/class/backlight/panel0-backlight/brightness
+    chmod 0664 /sys/class/backlight/panel0-backlight/brightness
+
+    # Touch — GPIO 21=RST, 22=IRQ confirmed from live_fdt.dts
+    chown system system /sys/bus/spi/devices/spi0.1/touch_enable
+    chmod 0664 /sys/bus/spi/devices/spi0.1/touch_enable
+
+    # SGM37604 backlight enable — GPIO 24 confirmed
+    write /sys/class/gpio/gpio24/direction out
+    write /sys/class/gpio/gpio24/value 1
+
+    # SM5109 backlight IC — i2c-0 address 0x3e confirmed
+    write /sys/bus/i2c/devices/0-003e/enable 1
+
+on charger
+    write /sys/class/backlight/panel0-backlight/brightness 200
